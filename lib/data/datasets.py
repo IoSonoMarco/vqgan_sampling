@@ -6,12 +6,6 @@ import torch
 from lib import filepaths
 
 
-@dataclass
-class ImageTokenDatasetOutput:
-    token_ids: torch.LongTensor
-    label_id: torch.LongTensor
-
-
 class ImageTokenDataset(Dataset):
     def __init__(self):
 
@@ -35,16 +29,31 @@ class ImageTokenDataset(Dataset):
     def __getitem__(self, idx):
 
         token_ids = self.token_ids[idx]
+    
+        token_ids=torch.tensor(token_ids).long()
+
+        return token_ids
+    
+
+class ImageTokenDatasetClassLabel(ImageTokenDataset):
+    def __init__(self):
+        super().__init__()
+
+    def __len__(self): return len(self.data)
+
+    def __getitem__(self, idx):
+
+        token_ids = self.token_ids[idx]
         
         label = self.cat_labels[idx]
 
-        return ImageTokenDatasetOutput(
-            token_ids=torch.tensor(token_ids).long(),
-            label_id=torch.tensor(label).long()
-        )
+        token_ids=torch.tensor(token_ids).long()
+        label_id=torch.tensor(label).long()
+
+        return token_ids, label_id
     
 
-class ImageTokenDatasetAbstractCategories(ImageTokenDataset):
+class ImageTokenDatasetSemanticLabel(ImageTokenDataset):
     def __init__(self):
         super().__init__()
 
@@ -71,7 +80,7 @@ class ImageTokenDatasetAbstractCategories(ImageTokenDataset):
 
         self.n_classes = len(self.cat_to_name_labels_mapping)
 
-    def __len__(self): return len(self.data)
+    def __len__(self): return len(self.token_ids)
 
     def __getitem__(self, idx):
 
@@ -79,8 +88,8 @@ class ImageTokenDatasetAbstractCategories(ImageTokenDataset):
         
         label = self.cat_labels[idx]
 
-        return ImageTokenDatasetOutput(
-            token_ids=torch.tensor(token_ids).long(),
-            label_id=torch.tensor(label).long()
-        )
+        token_ids=torch.tensor(token_ids).long()
+        label_id=torch.tensor(label).long()
+
+        return token_ids, label_id
 

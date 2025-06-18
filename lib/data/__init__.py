@@ -1,1 +1,1 @@
-from lib.data.datasets import ImageTokenDataset, ImageTokenDatasetAbstractCategories
+from lib.data.datasets import ImageTokenDataset, ImageTokenDatasetClassLabel, ImageTokenDatasetSemanticLabel
