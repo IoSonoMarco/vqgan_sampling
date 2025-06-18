@@ -28,6 +28,8 @@ class ImageTokenDataset(Dataset):
 
         self.cat_to_name_labels_mapping = {k:v for k,v in pd.DataFrame(dict(c=self.cat_labels, n=self.name_labels)).drop_duplicates().values}
 
+        self.n_classes = len(self.cat_to_name_labels_mapping)
+
     def __len__(self): return len(self.data)
 
     def __getitem__(self, idx):
@@ -66,4 +68,19 @@ class ImageTokenDatasetAbstractCategories(ImageTokenDataset):
         self.cat_labels = pd.Series(self.name_labels).astype("category").cat.codes
         self.cat_to_name_labels_mapping = {k:v for k,v in pd.DataFrame(dict(c=self.cat_labels, n=self.name_labels)).drop_duplicates().values}
         self.cat_to_name_labels_mapping = dict(sorted(self.cat_to_name_labels_mapping.items()))
+
+        self.n_classes = len(self.cat_to_name_labels_mapping)
+
+    def __len__(self): return len(self.data)
+
+    def __getitem__(self, idx):
+
+        token_ids = self.token_ids[idx]
+        
+        label = self.cat_labels[idx]
+
+        return ImageTokenDatasetOutput(
+            token_ids=torch.tensor(token_ids).long(),
+            label_id=torch.tensor(label).long()
+        )
 
