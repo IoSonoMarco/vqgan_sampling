@@ -8,6 +8,7 @@ import torch.nn as nn
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import yaml
 from lib.data import (
     ImageTokenDataset, 
     ImageTokenDatasetClassLabel,
@@ -29,6 +30,7 @@ device = torch.device("cuda:0")
 parser = argparse.ArgumentParser()
 parser.add_argument("--benchmark", type=str, choices=["unc", "cond_l", "cond_s"], required=True)
 parser.add_argument("--n_epochs", type=int, required=True)
+parser.add_argument("--batch_size", type=int, required=True)
 parser.add_argument("--save_every_epoch", type=int, required=True)
 parser.add_argument("--savepath", type=str, required=True)
 parser.add_argument("--loadpath", type=str, required=False)
@@ -56,37 +58,31 @@ model = dict(
 if __name__ == "__main__":
     args = parser.parse_args()
 
+    model_benchmark_configs = yaml.safe_load(open("./model_benchmark_configs.yaml", "r"))
+
     dataset = dataset[args.benchmark]()
 
     model_config = None
     match args.benchmark:
         case "unc":
             model_config = VanillaTransformerDecoderConfig(
-                d_model=512,
-                n_layers=12,
-                n_heads=8
+                **model_benchmark_configs["unc"]
             )
         case "cond_l":
             model_config = ConditionalTransformerDecoderConfig(
-                d_model=512,
-                n_layers=12,
-                n_heads=8,
-                class_prompt_length=5,
-                n_classes=dataset.n_classes
+                n_classes=dataset.n_classes,
+                **model_benchmark_configs["cond_l"]
             )
         case "cond_s":
             model_config = ConditionalTransformerDecoderConfig(
-                d_model=512,
-                n_layers=12,
-                n_heads=8,
-                class_prompt_length=2,
-                n_classes=dataset.n_classes
+                n_classes=dataset.n_classes,
+                **model_benchmark_configs["cond_s"]
             )
     model = model[args.benchmark](model_config)
 
     trainer = trainer[args.benchmark](
         train_dataset=dataset,
-        batch_size=8,
+        batch_size=args.batch_size,
         model=model,
         lr=2.25e-5,
         save_every_epoch=args.save_every_epoch,
@@ -95,7 +91,7 @@ if __name__ == "__main__":
     )
 
     if args.loadpath:
-        trainer.load(args.loadpath)
+        trainer.load_checkpoint(args.loadpath)
 
     trainer.train(args.n_epochs)
 

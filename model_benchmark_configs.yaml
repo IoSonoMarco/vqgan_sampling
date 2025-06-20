@@ -1,0 +1,14 @@
+unc:
+  d_model: 512
+  n_layers: 12
+  n_heads: 8
+cond_l:
+  d_model: 512
+  n_layers: 12
+  n_heads: 8
+  class_prompt_length: 5
+cond_s:
+  d_model: 512
+  n_layers: 12
+  n_heads: 8
+  class_prompt_length: 2
