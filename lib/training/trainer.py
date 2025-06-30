@@ -8,6 +8,8 @@ class UnconditionalTransformerTrainer(BaseTrainer):
         super().__init__(**kwargs)
 
     def step(self, batch: torch.LongTensor) -> Dict:
+        if isinstance(batch, list):
+            batch = batch[0]
         batch = batch.to(self.device)
 
         output = self.model(batch)
