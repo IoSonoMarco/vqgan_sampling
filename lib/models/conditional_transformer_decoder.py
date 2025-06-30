@@ -103,4 +103,25 @@ class ConditionalTransformerDecoder(BaseTransformerDecoder):
             logits=logits,
             loss=loss
         )
+    
+    @torch.no_grad()
+    def predict_next_token(self, prompt, inputs, k: int = None):
+        """
+        prompt: tensor of shape (prompt_length, d_model)
+        inputs: long tensor of shape (n_tokens,) 
+        where n_tokens is the number previous tokens
+        """
+        if len(inputs) == 0:
+            inputs = prompt[None]
+            n = inputs.size(1)
+        else:
+            inputs = self.embedding(inputs[None])
+            n = inputs.size(1)
+            inputs += self.positional_encoding[:n]
+            inputs = torch.cat([prompt[None], inputs], dim=1)
+            n = inputs.size(1)
+        inputs = self.encoder(inputs, mask=self.causal_mask[:n,:n])[0]
+        logits = self.prediction_head(inputs[-1][None])[0]
+        next_token = self.sample_topk(logits, k)
+        return next_token
 

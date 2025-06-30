@@ -1,9 +1,38 @@
+from typing import Literal
 from torch.utils.data import Dataset
 from dataclasses import dataclass
 import numpy as np
 import pandas as pd
+import pickle
 import torch
 from lib import filepaths
+
+
+class ImageTokenDatasetClassLabelNew(Dataset):
+    def __init__(self, dataset: Literal['flowers', 'tinyimagenet']):
+        
+        if dataset == "flowers":
+            data = pickle.load(open(filepaths.DATASET_IMAGE_TOKENS_FLOWERS, "rb"))
+        elif dataset == "tinyimagenet":
+            data = pickle.load(open(filepaths.DATASET_IMAGE_TOKENS_TINYIMAGENET, "rb"))
+
+        self.name_labels = data["label_ids"]
+        self.cat_labels = pd.Series(self.name_labels).astype("category").cat.codes
+        self.token_ids = data["tokens"]
+
+        self.cat_to_name_labels_mapping = {k:v for k,v in pd.DataFrame(dict(c=self.cat_labels, n=self.name_labels)).drop_duplicates().values}
+        self.n_classes = len(self.cat_to_name_labels_mapping)
+
+    def __len__(self): return len(self.token_ids)
+
+    def __getitem__(self, idx):
+        token_ids = self.token_ids[idx]
+        label_ids = self.cat_labels[idx]
+    
+        token_ids = torch.tensor(token_ids).long()
+        label_ids = torch.tensor(label_ids).long()
+
+        return token_ids, label_ids
 
 
 class ImageTokenDataset(Dataset):
